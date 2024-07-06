@@ -128,4 +128,39 @@ impl Transaction {
 
         Ok(())
     }
+
+    /// Verify verifies signatures of Transaction inputs
+    pub fn verify(&self, prev_TXs: HashMap<String, Transaction>) -> Result<bool> {
+        if self.is_coinbase() {
+            return Ok(true);
+        }
+
+        for vin in &self.vin {
+            if prev_TXs.get(&vin.txid).unwrap().id.is_empty() {
+                return Err(format_err!("ERROR: Previous transaction is not correct"));
+            }
+        }
+
+        let mut tx_copy = self.trim_copy();
+
+        for in_id in 0..self.vin.len() {
+            let prev_Tx = prev_TXs.get(&self.vin[in_id].txid).unwrap();
+            tx_copy.vin[in_id].signature.clear();
+            tx_copy.vin[in_id].pub_key = prev_Tx.vout[self.vin[in_id].vout as usize]
+                .pub_key_hash
+                .clone();
+            tx_copy.id = tx_copy.hash()?;
+            tx_copy.vin[in_id].pub_key = Vec::new();
+
+            if !ed25519::verify(
+                &tx_copy.id.as_bytes(),
+                &self.vin[in_id].pub_key,
+                &self.vin[in_id].signature,
+            ) {
+                return Ok(false);
+            }
+        }
+
+        Ok(true)
+    }
 }
