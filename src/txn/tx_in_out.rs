@@ -47,3 +47,8 @@ impl TXOutput {
     }
 }
 
+// TXOutputs collects TXOutput
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct TXOutputs {
+    pub outputs: Vec<TXOutput>,
+}
