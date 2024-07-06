@@ -27,6 +27,36 @@ pub struct Transaction {
 }
 
 impl Transaction {
+    /// NewCoinbaseTX creates a new coinbase transaction
+    pub fn new_coinbase(to: String, mut data: String) -> Result<Transaction> {
+        info!("new coinbase Transaction to: {}", to);
+        let mut key: [u8; 32] = [0; 32];
+        if data.is_empty() {
+            let mut rand = OsRng::default();
+            rand.fill_bytes(&mut key);
+            data = format!("Reward to '{}'", to);
+        }
+        let mut pub_key = Vec::from(data.as_bytes());
+        pub_key.append(&mut Vec::from(key));
+
+        let mut tx = Transaction {
+            id: String::new(),
+            vin: vec![TXInput {
+                txid: String::new(),
+                vout: -1,
+                signature: Vec::new(),
+                pub_key,
+            }],
+            vout: vec![TXOutput::new(SUBSIDY, to)?],
+        };
+        tx.id = tx.hash()?;
+        Ok(tx)
+    }
+
+    /// IsCoinbase checks whether the transaction is coinbase
+    pub fn is_coinbase(&self) -> bool {
+        self.vin.len() == 1 && self.vin[0].txid.is_empty() && self.vin[0].vout == -1
+    }
 
     /// Hash returns the hash of the Transaction
     pub fn hash(&self) -> Result<String> {
