@@ -25,3 +25,17 @@ pub struct Transaction {
     pub vin: Vec<TXInput>,
     pub vout: Vec<TXOutput>,
 }
+
+impl Transaction {
+
+    /// Hash returns the hash of the Transaction
+    pub fn hash(&self) -> Result<String> {
+        let mut copy = self.clone();
+        copy.id = String::new();
+        let data = serialize(&copy)?;
+        let mut hasher = Sha256::new();
+        hasher.input(&data[..]);
+        Ok(hasher.result_str())
+    }
+
+}
