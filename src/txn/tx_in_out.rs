@@ -21,3 +21,20 @@ pub struct TXOutput {
     pub value: i32,
     pub pub_key_hash: Vec<u8>,
 }
+
+impl TXOutput {
+
+    /// IsLockedWithKey checks if the output can be used by the owner of the pubkey
+    pub fn is_locked_with_key(&self, pub_key_hash: &[u8]) -> bool {
+        self.pub_key_hash == pub_key_hash
+    }
+
+    /// Lock signs the output
+    fn lock(&mut self, address: &str) -> Result<()> {
+        let pub_key_hash = Address::decode(address).unwrap().body;
+        debug!("lock: {}", address);
+        self.pub_key_hash = pub_key_hash;
+        Ok(())
+    }
+
+}
