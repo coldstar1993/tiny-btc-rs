@@ -1,20 +1,20 @@
 //! transaction implement
 
-use crate::common::Result;
 use crate::blockchain::UTXOSet;
-use crate::wallet::{Wallet, hash_pub_key};
+use crate::common::Result;
 use crate::txn::tx_in_out::{TXInput, TXOutput};
+use crate::wallet::{hash_pub_key, Wallet};
 use bincode::serialize;
 use bitcoincash_addr::Address;
 use crypto::digest::Digest;
 use crypto::ed25519;
 use crypto::sha2::Sha256;
 use failure::format_err;
+use log::{debug, error, info};
+use rand::rngs::OsRng;
 use rand::{Rng, RngCore};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use log::{debug, error, info};
-use rand::rngs::OsRng;
 
 const SUBSIDY: i32 = 10;
 
@@ -68,4 +68,64 @@ impl Transaction {
         Ok(hasher.result_str())
     }
 
+    /// TrimmedCopy creates a trimmed copy of Transaction to be used in signing
+    fn trim_copy(&self) -> Transaction {
+        let mut vin = Vec::new();
+        let mut vout = Vec::new();
+
+        for v in &self.vin {
+            vin.push(TXInput {
+                txid: v.txid.clone(),
+                vout: v.vout.clone(),
+                signature: Vec::new(),
+                pub_key: Vec::new(),
+            })
+        }
+
+        for v in &self.vout {
+            vout.push(TXOutput {
+                value: v.value,
+                pub_key_hash: v.pub_key_hash.clone(),
+            })
+        }
+
+        Transaction {
+            id: self.id.clone(),
+            vin,
+            vout,
+        }
+    }
+
+    /// Sign signs each input of a Transaction
+    pub fn sign(
+        &mut self,
+        private_key: &[u8],
+        prev_TXs: HashMap<String, Transaction>,
+    ) -> Result<()> {
+        if self.is_coinbase() {
+            return Ok(());
+        }
+
+        for vin in &self.vin {
+            if prev_TXs.get(&vin.txid).unwrap().id.is_empty() {
+                return Err(format_err!("ERROR: Previous transaction is not correct"));
+            }
+        }
+
+        let mut tx_copy = self.trim_copy();
+
+        for in_id in 0..tx_copy.vin.len() {
+            let prev_Tx = prev_TXs.get(&tx_copy.vin[in_id].txid).unwrap();
+            tx_copy.vin[in_id].signature.clear();
+            tx_copy.vin[in_id].pub_key = prev_Tx.vout[tx_copy.vin[in_id].vout as usize]
+                .pub_key_hash
+                .clone();
+            tx_copy.id = tx_copy.hash()?;
+            tx_copy.vin[in_id].pub_key = Vec::new();
+            let signature = ed25519::signature(tx_copy.id.as_bytes(), private_key);
+            self.vin[in_id].signature = signature.to_vec();
+        }
+
+        Ok(())
+    }
 }
