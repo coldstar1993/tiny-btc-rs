@@ -37,4 +37,13 @@ impl TXOutput {
         Ok(())
     }
 
+    pub fn new(value: i32, address: String) -> Result<Self> {
+        let mut txo = TXOutput {
+            value,
+            pub_key_hash: Vec::new(),
+        };
+        txo.lock(&address)?;
+        Ok(txo)
+    }
 }
+
