@@ -45,4 +45,18 @@ impl Wallets {
         address
     }
 
+    /// GetAddresses returns an array of addresses stored in the wallet file
+    pub fn get_all_addresses(&self) -> Vec<String> {
+        let mut addresses = Vec::<String>::new();
+        for (address, _) in &self.wallets {
+            addresses.push(address.clone());
+        }
+        addresses
+    }
+
+    /// GetWallet returns a Wallet by its address
+    pub fn get_wallet(&self, address: &str) -> Option<&Wallet> {
+        self.wallets.get(address)
+    }
+
 }
