@@ -59,4 +59,17 @@ impl Wallets {
         self.wallets.get(address)
     }
 
+    /// SaveToFile saves wallets to a file
+    pub fn save_all(&self) -> Result<()> {
+        let db = sled::open("data/wallets")?;
+
+        for (address, wallet) in &self.wallets {
+            let data = serialize(wallet)?;
+            db.insert(address, data)?;
+        }
+
+        db.flush()?;
+        drop(db);
+        Ok(())
+    }
 }
