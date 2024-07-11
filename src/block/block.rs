@@ -46,6 +46,11 @@ impl Block {
         Ok(block)
     }
 
+    /// NewGenesisBlock creates and returns genesis Block
+    pub fn new_genesis_block(coinbase: Transaction) -> Block {
+        Block::new_block(vec![coinbase], String::new(), 0).unwrap()
+    }
+
     /// Run performs a proof-of-work
     fn run_proof_of_work(&mut self) -> Result<()> {
         info!("Mining the block");
