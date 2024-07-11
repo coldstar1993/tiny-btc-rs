@@ -25,6 +25,22 @@ pub struct Block {
 }
 
 impl Block {
+    pub fn get_hash(&self) -> String {
+        self.hash.clone()
+    }
+
+    pub fn get_prev_hash(&self) -> String {
+        self.prev_block_hash.clone()
+    }
+
+    pub fn get_transaction(&self) -> &Vec<Transaction> {
+        &self.transactions
+    }
+
+    pub fn get_height(&self) -> i32 {
+        self.height
+    }
+
     /// NewBlock creates and returns Block
     pub fn new_block(
         transactions: Vec<Transaction>,
