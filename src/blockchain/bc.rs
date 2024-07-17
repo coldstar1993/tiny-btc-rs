@@ -10,6 +10,7 @@ use log::{debug, info};
 use sled;
 use std::collections::HashMap;
 
+
 const GENESIS_COINBASE_DATA: &str =
     "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
 
@@ -57,6 +58,14 @@ impl Blockchain {
         };
         bc.db.flush()?;
         Ok(bc)
+    }
+    
+    /// Iterator returns a BlockchainIterat
+    pub fn iter(&self) -> BlockchainIterator {
+        BlockchainIterator {
+            current_hash: self.tip.clone(),
+            bc: &self,
+        }
     }
 
 }
