@@ -22,6 +22,23 @@ pub struct Blockchain {
 
 
 impl Blockchain {
+    /// NewBlockchain creates a new Blockchain db
+    pub fn new() -> Result<Blockchain> {
+        info!("open blockchain");
+
+        let db = sled::open("data/blocks")?;
+        let hash = match db.get("LAST")? {
+            Some(l) => l.to_vec(),
+            None => Vec::new(),
+        };
+        info!("Found block database");
+        let lasthash = if hash.is_empty() {
+            String::new()
+        } else {
+            String::from_utf8(hash.to_vec())?
+        };
+        Ok(Blockchain { tip: lasthash, db })
+    }
 
     /// CreateBlockchain creates a new blockchain DB
     pub fn create_blockchain(address: String) -> Result<Blockchain> {
