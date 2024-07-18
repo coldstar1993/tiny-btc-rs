@@ -127,5 +127,14 @@ impl Blockchain {
         Err(format_err!("Transaction is not found"))
     }
 
+    fn get_prev_TXs(&self, tx: &Transaction) -> Result<HashMap<String, Transaction>> {
+        let mut prev_TXs = HashMap::new();
+        for vin in &tx.vin {
+            let prev_TX = self.find_transacton(&vin.txid)?;
+            prev_TXs.insert(prev_TX.id.clone(), prev_TX);
+        }
+        Ok(prev_TXs)
+    }
+
 }
 
