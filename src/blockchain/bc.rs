@@ -114,5 +114,18 @@ impl Blockchain {
 
         utxos
     }
+
+    /// FindTransaction finds a transaction by its ID
+    pub fn find_transacton(&self, id: &str) -> Result<Transaction> {
+        for b in self.iter() {
+            for tx in b.get_transaction() {
+                if tx.id == id {
+                    return Ok(tx.clone());
+                }
+            }
+        }
+        Err(format_err!("Transaction is not found"))
+    }
+
 }
 
