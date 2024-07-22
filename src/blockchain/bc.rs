@@ -165,6 +165,23 @@ impl Blockchain {
         Ok(last_block.get_height())
     }
 
+    /// AddBlock saves the block into the blockchain.
+    /// if the block is at higher block height, then switch *LAST* pointing to the new block height.
+    pub fn add_block(&mut self, block: Block) -> Result<()> {
+        let data = serialize(&block)?;
+        if let Some(_) = self.db.get(block.get_hash())? {
+            return Ok(());
+        }
+        self.db.insert(block.get_hash(), data)?;
+
+        let lastheight = self.get_best_height()?;
+        if block.get_height() > lastheight {
+            self.db.insert("LAST", block.get_hash().as_bytes())?;
+            self.tip = block.get_hash();
+            self.db.flush()?;
+        }
+        Ok(())
+    }
 
 }
 
