@@ -183,5 +183,14 @@ impl Blockchain {
         Ok(())
     }
 
+    /// GetBlockHashes returns a list of hashes of all the blocks in the chain
+    pub fn get_block_hashs(&self) -> Vec<String> {
+        let mut list = Vec::new();
+        for b in self.iter() {
+            list.push(b.get_hash());
+        }
+        list
+    }
+
 }
 
