@@ -192,5 +192,30 @@ impl Blockchain {
         list
     }
 
+    /// MineBlock mines a new block with the provided transactions
+    pub fn mine_block(&mut self, transactions: Vec<Transaction>) -> Result<Block> {
+        info!("mine a new block");
+
+        for tx in &transactions {
+            if !self.verify_transacton(tx)? {
+                return Err(format_err!("ERROR: Invalid transaction"));
+            }
+        }
+
+        let lasthash = self.db.get("LAST")?.unwrap();
+
+        let newblock = Block::new_block(
+            transactions,
+            String::from_utf8(lasthash.to_vec())?,
+            self.get_best_height()? + 1,
+        )?;
+        self.db.insert(newblock.get_hash(), serialize(&newblock)?)?;
+        self.db.insert("LAST", newblock.get_hash().as_bytes())?;
+        self.db.flush()?;
+
+        self.tip = newblock.get_hash();
+        Ok(newblock)
+    }
+
 }
 
