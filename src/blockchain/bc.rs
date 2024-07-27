@@ -1,15 +1,14 @@
 //! Blockchain
 
 use super::*;
+use crate::block::*;
 use crate::common::Result;
-use crate::block::{block::*};
 use crate::txn::*;
 use bincode::{deserialize, serialize};
 use failure::format_err;
 use log::{debug, info};
 use sled;
 use std::collections::HashMap;
-
 
 const GENESIS_COINBASE_DATA: &str =
     "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
@@ -20,7 +19,6 @@ pub struct Blockchain {
     pub tip: String,
     pub db: sled::Db,
 }
-
 
 impl Blockchain {
     /// NewBlockchain creates a new Blockchain db
@@ -59,7 +57,7 @@ impl Blockchain {
         bc.db.flush()?;
         Ok(bc)
     }
-    
+
     /// Iterator returns a BlockchainIterat
     pub fn iter(&self) -> BlockchainIterator {
         BlockchainIterator {
@@ -136,7 +134,6 @@ impl Blockchain {
         Ok(prev_TXs)
     }
 
-    
     /// SignTransaction signs inputs of a Transaction
     pub fn sign_transacton(&self, tx: &mut Transaction, private_key: &[u8]) -> Result<()> {
         let prev_TXs = self.get_prev_TXs(tx)?;
@@ -216,6 +213,4 @@ impl Blockchain {
         self.tip = newblock.get_hash();
         Ok(newblock)
     }
-
 }
-
