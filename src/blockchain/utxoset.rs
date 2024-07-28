@@ -1,0 +1,45 @@
+//! unspend transaction output set
+
+use crate::{blockchain::Blockchain, block::Block, common::Result, txn::TXOutputs};
+use bincode::{deserialize, serialize};
+use sled;
+use std::collections::HashMap;
+
+/// UTXOSet represents UTXO set
+pub struct UTXOSet {
+    pub blockchain: Blockchain,
+}
+
+impl UTXOSet {
+    /// FindUnspentTransactions returns a list of transactions containing unspent outputs
+    pub fn find_spendable_outputs(
+        &self,
+        pub_key_hash: &[u8],
+        amount: i32,
+    ) -> Result<(i32, HashMap<String, Vec<i32>>)> {
+        let mut unspent_outputs: HashMap<String, Vec<i32>> = HashMap::new();
+        let mut accumulated = 0;
+
+        let db = sled::open("data/utxos")?;
+        for kv in db.iter() {
+            let (k, v) = kv?;
+            let txid = String::from_utf8(k.to_vec())?;
+            let outs: TXOutputs = deserialize(&v.to_vec())?;
+
+            for out_idx in 0..outs.outputs.len() {
+                if outs.outputs[out_idx].is_locked_with_key(pub_key_hash) && accumulated < amount {
+                    accumulated += outs.outputs[out_idx].value;
+                    match unspent_outputs.get_mut(&txid) {
+                        Some(v) => v.push(out_idx as i32),
+                        None => {
+                            unspent_outputs.insert(txid.clone(), vec![out_idx as i32]);
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok((accumulated, unspent_outputs))
+    }
+
+}
