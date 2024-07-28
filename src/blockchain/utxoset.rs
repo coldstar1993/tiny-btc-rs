@@ -42,4 +42,24 @@ impl UTXOSet {
         Ok((accumulated, unspent_outputs))
     }
 
+    /// FindUTXO finds UTXO for a public key hash
+    pub fn find_UTXO(&self, pub_key_hash: &[u8]) -> Result<TXOutputs> {
+        let mut utxos = TXOutputs {
+            outputs: Vec::new(),
+        };
+        let db = sled::open("data/utxos")?;
+
+        for kv in db.iter() {
+            let (_, v) = kv?;
+            let outs: TXOutputs = deserialize(&v.to_vec())?;
+
+            for out in outs.outputs {
+                if out.is_locked_with_key(pub_key_hash) {
+                    utxos.outputs.push(out.clone())
+                }
+            }
+        }
+
+        Ok(utxos)
+    }
 }
