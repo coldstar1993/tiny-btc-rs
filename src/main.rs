@@ -14,3 +14,14 @@ mod server;
 mod txn;
 mod wallet;
 
+pub static CONFIG: LazyLock<RwLock<AppConfig>> = LazyLock::new(||{
+    RwLock::new(AppConfig{
+        port: env::var("port").unwrap_or(String::from("3000")).parse().unwrap()
+    })
+});
+
+fn main() -> Result<()> {
+    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
+
+    Ok(())
+}
