@@ -27,6 +27,56 @@ pub struct Transaction {
 }
 
 impl Transaction {
+        /// NewUTXOTransaction creates a new transaction
+    pub fn new_UTXO(wallet: &Wallet, to: &str, amount: i32, utxo: &UTXOSet) -> Result<Transaction> {
+        info!(
+            "new UTXO Transaction from: {} to: {}",
+            wallet.get_address(),
+            to
+        );
+        let mut vin = Vec::new();
+
+        let mut pub_key_hash = wallet.public_key.clone();
+        hash_pub_key(&mut pub_key_hash);
+
+        let acc_v = utxo.find_spendable_outputs(&pub_key_hash, amount)?;
+
+        if acc_v.0 < amount {
+            error!("Not Enough balance");
+            return Err(format_err!(
+                "Not Enough balance: current balance {}",
+                acc_v.0
+            ));
+        }
+
+        for tx in acc_v.1 {
+            for out in tx.1 {
+                let input = TXInput {
+                    txid: tx.0.clone(),
+                    vout: out,
+                    signature: Vec::new(),
+                    pub_key: wallet.public_key.clone(),
+                };
+                vin.push(input);
+            }
+        }
+
+        let mut vout = vec![TXOutput::new(amount, to.to_string())?];
+        if acc_v.0 > amount {
+            vout.push(TXOutput::new(acc_v.0 - amount, wallet.get_address())?) // give change(找零)
+        }
+
+        let mut tx = Transaction {
+            id: String::new(),
+            vin,
+            vout,
+        };
+        tx.id = tx.hash()?;
+        utxo.blockchain
+            .sign_transacton(&mut tx, &wallet.secret_key)?;
+        Ok(tx)
+    }
+
     /// NewCoinbaseTX creates a new coinbase transaction
     pub fn new_coinbase(to: String, mut data: String) -> Result<Transaction> {
         info!("new coinbase Transaction to: {}", to);
