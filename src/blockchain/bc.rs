@@ -180,6 +180,13 @@ impl Blockchain {
         Ok(())
     }
 
+    // GetBlock finds a block by its hash and returns it
+    pub fn get_block(&self, block_hash: &str) -> Result<Block> {
+        let data = self.db.get(block_hash)?.unwrap();
+        let block = deserialize(&data.to_vec())?;
+        Ok(block)
+    }
+    
     /// GetBlockHashes returns a list of hashes of all the blocks in the chain
     pub fn get_block_hashs(&self) -> Vec<String> {
         let mut list = Vec::new();
