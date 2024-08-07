@@ -19,6 +19,55 @@ use std::sync::*;
 use std::thread;
 use std::time::Duration;
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+enum Message {
+    Addr(Vec<String>),
+    Version(Versionmsg),
+    Tx(Txmsg),
+    GetData(GetDatamsg),
+    GetBlock(GetBlocksmsg),
+    Inv(Invmsg),
+    Block(Blockmsg),
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct Blockmsg {
+    addr_from: String,
+    block: Block,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct GetBlocksmsg {
+    addr_from: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct GetDatamsg {
+    addr_from: String,
+    kind: String,
+    id: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct Invmsg {
+    addr_from: String,
+    kind: String,
+    items: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct Txmsg {
+    addr_from: String,
+    transaction: Transaction,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+struct Versionmsg {
+    addr_from: String,
+    version: i32,
+    best_height: i32,
+}
+
 pub struct Server {
     /**
      * current node address(ip:port)
@@ -55,3 +104,4 @@ struct ServerInner {
 
 const CMD_LEN: usize = 12;
 const VERSION: i32 = 1;
+
