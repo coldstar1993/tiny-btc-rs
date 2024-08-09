@@ -105,6 +105,35 @@ struct ServerInner {
 const CMD_LEN: usize = 12;
 const VERSION: i32 = 1;
 
+impl Server {
+    pub fn new(port: &str, miner_address: &str, utxo: UTXOSet) -> Result<Server> {
+        let mut node_set = HashSet::new();
+
+        let json_str = fs::read_to_string("seeds.json").expect("cannot read from seeds.json");
+        let json_value: Value = serde_json::from_str(&json_str).unwrap();
+        if let Value::Object(obj) = &json_value {
+            if let Some(Value::Array(seeds)) = obj.get("seeds") {
+                for seed in seeds.iter() {
+                    if let Value::String(addr) = seed {
+                        node_set.insert(String::from(addr));
+                    }
+                }
+            }
+        }
+
+        Ok(Server {
+            node_address: String::from("localhost:") + port,
+            mining_address: miner_address.to_string(),
+            inner: Arc::new(Mutex::new(ServerInner {
+                known_nodes: node_set,
+                utxo,
+                blocks_in_transit: Vec::new(),
+                mempool: HashMap::new(),
+            })),
+        })
+    }
+
+}
 
 fn cmd_to_bytes(cmd: &str) -> [u8; CMD_LEN] {
     let mut data = [0; CMD_LEN];
