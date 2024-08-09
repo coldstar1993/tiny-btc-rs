@@ -133,6 +133,17 @@ impl Server {
         })
     }
 
+    fn remove_node(&self, addr: &str) {
+        self.inner.lock().unwrap().known_nodes.remove(addr);
+    }
+
+    fn add_nodes(&self, addr: &str) {
+        self.inner
+            .lock()
+            .unwrap()
+            .known_nodes
+            .insert(String::from(addr));
+    }
 }
 
 fn cmd_to_bytes(cmd: &str) -> [u8; CMD_LEN] {
