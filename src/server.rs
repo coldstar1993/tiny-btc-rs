@@ -144,6 +144,27 @@ impl Server {
             .known_nodes
             .insert(String::from(addr));
     }
+
+    
+    fn handle_connection(&self, mut stream: TcpStream) -> Result<()> {
+        let mut buffer = Vec::new();
+        let count = stream.read_to_end(&mut buffer)?;
+        info!("Accept request: length {}", count);
+
+        let cmd = bytes_to_cmd(&buffer)?;
+
+        match cmd {
+            Message::Addr(data) => (),
+            Message::Block(data) => (),
+            Message::Inv(data) => (),
+            Message::GetBlock(data) => (),
+            Message::GetData(data) => (),
+            Message::Tx(data) => (),
+            Message::Version(data) => (),
+        }
+
+        Ok(())
+    }
 }
 
 fn cmd_to_bytes(cmd: &str) -> [u8; CMD_LEN] {
