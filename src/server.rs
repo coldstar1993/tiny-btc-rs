@@ -133,6 +133,16 @@ impl Server {
         })
     }
 
+    /// recieve sender's node_set
+    fn handle_addr(&self, msg: Vec<String>) -> Result<()> {
+        info!("receive address msg: {:#?}", msg);
+        for node in msg {
+            self.add_nodes(&node);
+        }
+        //self.request_blocks()?;
+        Ok(())
+    }
+
     fn remove_node(&self, addr: &str) {
         self.inner.lock().unwrap().known_nodes.remove(addr);
     }
@@ -154,7 +164,7 @@ impl Server {
         let cmd = bytes_to_cmd(&buffer)?;
 
         match cmd {
-            Message::Addr(data) => (),
+            Message::Addr(data) => self.handle_addr(data)?,
             Message::Block(data) => (),
             Message::Inv(data) => (),
             Message::GetBlock(data) => (),
