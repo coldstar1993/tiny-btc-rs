@@ -155,6 +155,10 @@ impl Server {
             .insert(String::from(addr));
     }
 
+    fn add_block(&self, block: Block) -> Result<()> {
+        self.inner.lock().unwrap().utxo.blockchain.add_block(block)
+    }
+
     
     fn handle_connection(&self, mut stream: TcpStream) -> Result<()> {
         let mut buffer = Vec::new();
