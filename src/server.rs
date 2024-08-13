@@ -158,7 +158,16 @@ impl Server {
     fn add_block(&self, block: Block) -> Result<()> {
         self.inner.lock().unwrap().utxo.blockchain.add_block(block)
     }
-    
+
+    fn get_block(&self, block_hash: &str) -> Result<Block> {
+        self.inner
+            .lock()
+            .unwrap()
+            .utxo
+            .blockchain
+            .get_block(block_hash)
+    }
+
     fn verify_tx(&self, tx: &Transaction) -> Result<bool> {
         self.inner
             .lock()
@@ -167,7 +176,7 @@ impl Server {
             .blockchain
             .verify_transacton(tx)
     }
-    
+
     fn handle_connection(&self, mut stream: TcpStream) -> Result<()> {
         let mut buffer = Vec::new();
         let count = stream.read_to_end(&mut buffer)?;
