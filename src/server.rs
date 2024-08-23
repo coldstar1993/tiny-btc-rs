@@ -168,6 +168,10 @@ impl Server {
             .get_block(block_hash)
     }
 
+    fn get_block_hashs(&self) -> Vec<String> {
+        self.inner.lock().unwrap().utxo.blockchain.get_block_hashs()
+    }
+
     fn verify_tx(&self, tx: &Transaction) -> Result<bool> {
         self.inner
             .lock()
