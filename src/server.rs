@@ -172,6 +172,10 @@ impl Server {
         self.inner.lock().unwrap().utxo.blockchain.get_block_hashs()
     }
 
+    fn get_best_height(&self) -> Result<i32> {
+        self.inner.lock().unwrap().utxo.blockchain.get_best_height()
+    }
+
     fn verify_tx(&self, tx: &Transaction) -> Result<bool> {
         self.inner
             .lock()
