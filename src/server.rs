@@ -185,6 +185,19 @@ impl Server {
             .verify_transacton(tx)
     }
 
+    fn get_mempool(&self) -> HashMap<String, Transaction> {
+        self.inner.lock().unwrap().mempool.clone()
+    }
+
+    fn insert_mempool(&self, tx: Transaction) {
+        self.inner.lock().unwrap().mempool.insert(tx.id.clone(), tx);
+    }
+
+    fn clear_mempool(&self) {
+        self.inner.lock().unwrap().mempool.clear()
+    }
+
+
     fn handle_connection(&self, mut stream: TcpStream) -> Result<()> {
         let mut buffer = Vec::new();
         let count = stream.read_to_end(&mut buffer)?;
