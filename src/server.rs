@@ -197,6 +197,12 @@ impl Server {
         self.inner.lock().unwrap().mempool.clear()
     }
 
+    fn get_mempool_tx(&self, addr: &str) -> Option<Transaction> {
+        match self.inner.lock().unwrap().mempool.get(addr) {
+            Some(tx) => Some(tx.clone()),
+            None => None,
+        }
+    }
 
     fn handle_connection(&self, mut stream: TcpStream) -> Result<()> {
         let mut buffer = Vec::new();
