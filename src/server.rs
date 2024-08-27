@@ -155,6 +155,14 @@ impl Server {
             .insert(String::from(addr));
     }
 
+    fn get_known_nodes(&self) -> HashSet<String> {
+        self.inner.lock().unwrap().known_nodes.clone()
+    }
+
+    fn node_is_known(&self, addr: &str) -> bool {
+        self.inner.lock().unwrap().known_nodes.get(addr).is_some()
+    }
+
     fn add_block(&self, block: Block) -> Result<()> {
         self.inner.lock().unwrap().utxo.blockchain.add_block(block)
     }
