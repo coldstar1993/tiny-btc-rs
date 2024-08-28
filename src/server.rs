@@ -212,6 +212,15 @@ impl Server {
         }
     }
 
+    fn replace_in_transit(&self, hashs: Vec<String>) {
+        let bit = &mut self.inner.lock().unwrap().blocks_in_transit;
+        bit.clone_from(&hashs);
+    }
+
+    fn get_in_transit(&self) -> Vec<String> {
+        self.inner.lock().unwrap().blocks_in_transit.clone()
+    }
+
     fn handle_connection(&self, mut stream: TcpStream) -> Result<()> {
         let mut buffer = Vec::new();
         let count = stream.read_to_end(&mut buffer)?;
