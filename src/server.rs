@@ -167,6 +167,10 @@ impl Server {
         self.inner.lock().unwrap().utxo.blockchain.add_block(block)
     }
 
+    fn mine_block(&self, txs: Vec<Transaction>) -> Result<Block> {
+        self.inner.lock().unwrap().utxo.blockchain.mine_block(txs)
+    }
+
     fn get_block(&self, block_hash: &str) -> Result<Block> {
         self.inner
             .lock()
