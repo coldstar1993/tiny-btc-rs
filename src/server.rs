@@ -197,6 +197,10 @@ impl Server {
             .verify_transacton(tx)
     }
 
+    fn utxo_reindex(&self) -> Result<()> {
+        self.inner.lock().unwrap().utxo.reindex()
+    }
+
     fn get_mempool(&self) -> HashMap<String, Transaction> {
         self.inner.lock().unwrap().mempool.clone()
     }
