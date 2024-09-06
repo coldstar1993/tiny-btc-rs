@@ -229,6 +229,24 @@ impl Server {
         self.inner.lock().unwrap().blocks_in_transit.clone()
     }
 
+    fn send_data(&self, addr: &str, data: &[u8]) -> Result<()> {
+        if addr == &self.node_address {
+            return Ok(());
+        }
+        let mut stream = match TcpStream::connect(addr) {
+            Ok(s) => s,
+            Err(_) => {
+                self.remove_node(addr); // TODO should record score/ratio for each neighbor node
+                return Ok(());
+            }
+        };
+
+        stream.write(data)?;
+
+        info!("data send successfully");
+        Ok(())
+    }
+
     fn handle_connection(&self, mut stream: TcpStream) -> Result<()> {
         let mut buffer = Vec::new();
         let count = stream.read_to_end(&mut buffer)?;
