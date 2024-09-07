@@ -247,6 +247,18 @@ impl Server {
         Ok(())
     }
 
+    
+    fn send_block(&self, addr: &str, b: &Block) -> Result<()> {
+        info!("send block data to: {} block hash: {}", addr, b.get_hash());
+        let data = Blockmsg {
+            addr_from: self.node_address.clone(),
+            block: b.clone(),
+        };
+        let data = serialize(&(cmd_to_bytes("block"), data))?;
+        self.send_data(addr, &data)
+    }
+
+
     fn handle_connection(&self, mut stream: TcpStream) -> Result<()> {
         let mut buffer = Vec::new();
         let count = stream.read_to_end(&mut buffer)?;
