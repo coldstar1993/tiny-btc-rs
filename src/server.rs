@@ -258,6 +258,12 @@ impl Server {
         self.send_data(addr, &data)
     }
 
+    fn send_addr(&self, addr: &str) -> Result<()> {
+        info!("send address info to: {}", addr);
+        let nodes = self.get_known_nodes();
+        let data = serialize(&(cmd_to_bytes("addr"), nodes))?;
+        self.send_data(addr, &data)
+    }
 
     fn handle_connection(&self, mut stream: TcpStream) -> Result<()> {
         let mut buffer = Vec::new();
