@@ -265,6 +265,26 @@ impl Server {
         self.send_data(addr, &data)
     }
 
+    /// inventory message:在比特币协议中，inv 消息（inventory message）用于节点间通告他们拥有哪些数据（如交易、区块）。这是一种节点用来告知其他节点自己拥有哪些对象的消息类型。
+    ///
+    /// Inventory Relay 机制:
+    /// * 节点不直接广播原始交易(完整体)
+    /// * 先发送 ​​INV消息​​（交易ID\区块ID）
+    /// * 邻居节点主动请求完整数据：
+    fn send_inv(&self, addr: &str, kind: &str, items: Vec<String>) -> Result<()> {
+        info!(
+            "send inv message to: {} kind: {} data: {:?}",
+            addr, kind, items
+        );
+        let data = Invmsg {
+            addr_from: self.node_address.clone(),
+            kind: kind.to_string(),
+            items,
+        };
+        let data = serialize(&(cmd_to_bytes("inv"), data))?;
+        self.send_data(addr, &data)
+    }
+
     fn handle_connection(&self, mut stream: TcpStream) -> Result<()> {
         let mut buffer = Vec::new();
         let count = stream.read_to_end(&mut buffer)?;
