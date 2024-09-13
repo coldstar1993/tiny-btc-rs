@@ -294,7 +294,20 @@ impl Server {
         self.send_data(addr, &data)
     }
 
-    
+    fn send_get_data(&self, addr: &str, kind: &str, id: &str) -> Result<()> {
+        info!(
+            "send get data message to: {} kind: {} id: {}",
+            addr, kind, id
+        );
+        let data = GetDatamsg {
+            addr_from: self.node_address.clone(),
+            kind: kind.to_string(),
+            id: id.to_string(),
+        };
+        let data = serialize(&(cmd_to_bytes("getdata"), data))?;
+        self.send_data(addr, &data)
+    }
+
     pub fn send_tx(&self, addr: &str, tx: &Transaction) -> Result<()> {
         info!("send tx to: {} txid: {}", addr, &tx.id);
         let data = Txmsg {
