@@ -294,6 +294,18 @@ impl Server {
         self.send_data(addr, &data)
     }
 
+    
+    pub fn send_tx(&self, addr: &str, tx: &Transaction) -> Result<()> {
+        info!("send tx to: {} txid: {}", addr, &tx.id);
+        let data = Txmsg {
+            addr_from: self.node_address.clone(),
+            transaction: tx.clone(),
+        };
+        let data = serialize(&(cmd_to_bytes("tx"), data))?;
+        self.send_data(addr, &data)
+    }
+
+
     fn handle_connection(&self, mut stream: TcpStream) -> Result<()> {
         let mut buffer = Vec::new();
         let count = stream.read_to_end(&mut buffer)?;
