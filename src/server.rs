@@ -317,6 +317,17 @@ impl Server {
         let data = serialize(&(cmd_to_bytes("tx"), data))?;
         self.send_data(addr, &data)
     }
+    
+    fn send_version(&self, addr: &str) -> Result<()> {
+        info!("send version info to: {}", addr);
+        let data = Versionmsg {
+            addr_from: self.node_address.clone(),
+            best_height: self.get_best_height()?,
+            version: VERSION,
+        };
+        let data = serialize(&(cmd_to_bytes("version"), data))?;
+        self.send_data(addr, &data)
+    }
 
 
     fn handle_connection(&self, mut stream: TcpStream) -> Result<()> {
