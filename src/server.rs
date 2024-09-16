@@ -329,6 +329,25 @@ impl Server {
         self.send_data(addr, &data)
     }
 
+    
+    /// recieving version msg means the sender (perhaps just start up) expects to exchange info including node_set, best_height, etc.
+    fn handle_version(&self, msg: Versionmsg) -> Result<()> {
+        info!("receive version msg: {:#?}", msg);
+        let my_best_height = self.get_best_height()?;
+        if my_best_height < msg.best_height {
+            self.send_get_blocks(&msg.addr_from)?;
+        } else if my_best_height > msg.best_height {
+            self.send_version(&msg.addr_from)?;
+        }
+
+        // share local node_set
+        self.send_addr(&msg.addr_from)?;
+
+        if !self.node_is_known(&msg.addr_from) {
+            self.add_nodes(&msg.addr_from);
+        }
+        Ok(())
+    }
 
     fn handle_connection(&self, mut stream: TcpStream) -> Result<()> {
         let mut buffer = Vec::new();
@@ -344,7 +363,7 @@ impl Server {
             Message::GetBlock(data) => (),
             Message::GetData(data) => (),
             Message::Tx(data) => (),
-            Message::Version(data) => (),
+            Message::Version(data) => self.handle_version(data)?,
         }
 
         Ok(())
