@@ -247,7 +247,6 @@ impl Server {
         Ok(())
     }
 
-    
     fn send_block(&self, addr: &str, b: &Block) -> Result<()> {
         info!("send block data to: {} block hash: {}", addr, b.get_hash());
         let data = Blockmsg {
@@ -317,7 +316,7 @@ impl Server {
         let data = serialize(&(cmd_to_bytes("tx"), data))?;
         self.send_data(addr, &data)
     }
-    
+
     fn send_version(&self, addr: &str) -> Result<()> {
         info!("send version info to: {}", addr);
         let data = Versionmsg {
@@ -329,7 +328,6 @@ impl Server {
         self.send_data(addr, &data)
     }
 
-    
     /// recieving version msg means the sender (perhaps just start up) expects to exchange info including node_set, best_height, etc.
     fn handle_version(&self, msg: Versionmsg) -> Result<()> {
         info!("receive version msg: {:#?}", msg);
@@ -349,6 +347,72 @@ impl Server {
         Ok(())
     }
 
+    /// handle a new tx from user
+    fn handle_tx(&self, msg: Txmsg) -> Result<()> {
+        info!("receive tx msg: {} {}", msg.addr_from, &msg.transaction.id);
+
+        // if this tx has never been seen, then broadcast it to neighbor
+        let mut mempool = self.get_mempool();
+        debug!("Current mempool: {:#?}", &mempool);
+
+        if !mempool.contains_key(&msg.transaction.id) {
+            // if this is a totally new tx, then store it into mempool and broadcat it.
+            info!(
+                "mempool does NOT contain the tx:{}, then store it and broadcast it to neighbor",
+                &msg.transaction.id
+            );
+
+            self.insert_mempool(msg.transaction.clone());
+
+            let known_nodes = self.get_known_nodes();
+            for node in known_nodes {
+                if node != self.node_address && node != msg.addr_from {
+                    self.send_inv(&node, "tx", vec![msg.transaction.id.clone()])?;
+                }
+            }
+        }
+
+        if mempool.len() >= 1 && !self.mining_address.is_empty() {
+            loop {
+                let mut txs = Vec::new();
+
+                for (_, tx) in &mempool {
+                    if self.verify_tx(tx)? {
+                        txs.push(tx.clone());
+                    }
+                }
+
+                if txs.is_empty() {
+                    return Ok(());
+                }
+
+                let cbtx = Transaction::new_coinbase(self.mining_address.clone(), String::new())?;
+                txs.push(cbtx);
+
+                for tx in &txs {
+                    mempool.remove(&tx.id);
+                }
+
+                let new_block = self.mine_block(txs)?;
+                self.utxo_reindex()?;
+
+                // broadcast the newly mined block hash to neighbor nodes
+                for node in self.get_known_nodes() {
+                    if node != self.node_address {
+                        self.send_inv(&node, "block", vec![new_block.get_hash()])?;
+                    }
+                }
+
+                if mempool.len() == 0 {
+                    break;
+                }
+            }
+            self.clear_mempool();
+        }
+
+        Ok(())
+    }
+
     fn handle_connection(&self, mut stream: TcpStream) -> Result<()> {
         let mut buffer = Vec::new();
         let count = stream.read_to_end(&mut buffer)?;
@@ -357,13 +421,13 @@ impl Server {
         let cmd = bytes_to_cmd(&buffer)?;
 
         match cmd {
+            Message::Version(data) => self.handle_version(data)?,
             Message::Addr(data) => self.handle_addr(data)?,
             Message::Block(data) => (),
             Message::Inv(data) => (),
             Message::GetBlock(data) => (),
             Message::GetData(data) => (),
-            Message::Tx(data) => (),
-            Message::Version(data) => self.handle_version(data)?,
+            Message::Tx(data) => self.handle_tx(data)?,
         }
 
         Ok(())
