@@ -412,6 +412,33 @@ impl Server {
 
         Ok(())
     }
+    
+    fn handle_inv(&self, msg: Invmsg) -> Result<()> {
+        info!("receive inv msg: {:#?}", msg);
+        if msg.kind == "block" {
+            let block_hash = &msg.items[0];
+            self.send_get_data(&msg.addr_from, "block", block_hash)?;
+
+            let mut new_in_transit = Vec::new();
+            for b in &msg.items {
+                if b != block_hash {
+                    new_in_transit.push(b.clone());
+                }
+            }
+            self.replace_in_transit(new_in_transit);
+        } else if msg.kind == "tx" {
+            let txid = &msg.items[0];
+            match self.get_mempool_tx(txid) {
+                Some(tx) => {
+                    if tx.id.is_empty() {
+                        self.send_get_data(&msg.addr_from, "tx", txid)?
+                    }
+                }
+                None => self.send_get_data(&msg.addr_from, "tx", txid)?,
+            }
+        }
+        Ok(())
+    }
 
     fn handle_connection(&self, mut stream: TcpStream) -> Result<()> {
         let mut buffer = Vec::new();
@@ -424,7 +451,7 @@ impl Server {
             Message::Version(data) => self.handle_version(data)?,
             Message::Addr(data) => self.handle_addr(data)?,
             Message::Block(data) => (),
-            Message::Inv(data) => (),
+            Message::Inv(data) => self.handle_inv(data)?,
             Message::GetBlock(data) => (),
             Message::GetData(data) => (),
             Message::Tx(data) => self.handle_tx(data)?,
