@@ -440,6 +440,14 @@ impl Server {
         Ok(())
     }
 
+    /// send back all block hashes in local ledger to **`from_addr`**
+    fn handle_get_blocks(&self, msg: GetBlocksmsg) -> Result<()> {
+        info!("receive get blocks msg: {:#?}", msg);
+        let block_hashs = self.get_block_hashs();
+        self.send_inv(&msg.addr_from, "block", block_hashs)?;
+        Ok(())
+    }
+
     fn handle_connection(&self, mut stream: TcpStream) -> Result<()> {
         let mut buffer = Vec::new();
         let count = stream.read_to_end(&mut buffer)?;
@@ -452,7 +460,7 @@ impl Server {
             Message::Addr(data) => self.handle_addr(data)?,
             Message::Block(data) => (),
             Message::Inv(data) => self.handle_inv(data)?,
-            Message::GetBlock(data) => (),
+            Message::GetBlock(data) => self.handle_get_blocks(data)?,
             Message::GetData(data) => (),
             Message::Tx(data) => self.handle_tx(data)?,
         }
