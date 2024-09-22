@@ -448,6 +448,28 @@ impl Server {
         Ok(())
     }
 
+    /// recieve a block and persist it
+    fn handle_block(&self, msg: Blockmsg) -> Result<()> {
+        info!(
+            "receive block msg: {}, {}",
+            msg.addr_from,
+            msg.block.get_hash()
+        );
+        self.add_block(msg.block)?;
+
+        let mut in_transit = self.get_in_transit();
+        if in_transit.len() > 0 {
+            let block_hash = &in_transit[0];
+            self.send_get_data(&msg.addr_from, "block", block_hash)?;
+            in_transit.remove(0);
+            self.replace_in_transit(in_transit);
+        } else {
+            self.utxo_reindex()?;
+        }
+
+        Ok(())
+    }
+
     fn handle_connection(&self, mut stream: TcpStream) -> Result<()> {
         let mut buffer = Vec::new();
         let count = stream.read_to_end(&mut buffer)?;
@@ -458,7 +480,7 @@ impl Server {
         match cmd {
             Message::Version(data) => self.handle_version(data)?,
             Message::Addr(data) => self.handle_addr(data)?,
-            Message::Block(data) => (),
+            Message::Block(data) => self.handle_block(data)?,
             Message::Inv(data) => self.handle_inv(data)?,
             Message::GetBlock(data) => self.handle_get_blocks(data)?,
             Message::GetData(data) => (),
