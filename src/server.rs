@@ -470,6 +470,20 @@ impl Server {
         Ok(())
     }
 
+    
+    /// send back complete block/tx body to **`from_addr`**
+    fn handle_get_data(&self, msg: GetDatamsg) -> Result<()> {
+        info!("receive get data msg: {:#?}", msg);
+        if msg.kind == "block" {
+            let block = self.get_block(&msg.id)?;
+            self.send_block(&msg.addr_from, &block)?;
+        } else if msg.kind == "tx" {
+            let tx = self.get_mempool_tx(&msg.id).unwrap();
+            self.send_tx(&msg.addr_from, &tx)?;
+        }
+        Ok(())
+    }
+
     fn handle_connection(&self, mut stream: TcpStream) -> Result<()> {
         let mut buffer = Vec::new();
         let count = stream.read_to_end(&mut buffer)?;
@@ -483,7 +497,7 @@ impl Server {
             Message::Block(data) => self.handle_block(data)?,
             Message::Inv(data) => self.handle_inv(data)?,
             Message::GetBlock(data) => self.handle_get_blocks(data)?,
-            Message::GetData(data) => (),
+            Message::GetData(data) => self.handle_get_data(data)?,
             Message::Tx(data) => self.handle_tx(data)?,
         }
 
