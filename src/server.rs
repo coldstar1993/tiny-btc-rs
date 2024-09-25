@@ -133,6 +133,7 @@ impl Server {
         })
     }
 
+    
     /// recieve sender's node_set
     fn handle_addr(&self, msg: Vec<String>) -> Result<()> {
         info!("receive address msg: {:#?}", msg);
@@ -161,6 +162,13 @@ impl Server {
 
     fn node_is_known(&self, addr: &str) -> bool {
         self.inner.lock().unwrap().known_nodes.get(addr).is_some()
+    }
+
+    fn request_blocks(&self) -> Result<()> {
+        for node in self.get_known_nodes() {
+            self.send_get_blocks(&node)?
+        }
+        Ok(())
     }
 
     fn add_block(&self, block: Block) -> Result<()> {
