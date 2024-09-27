@@ -133,8 +133,13 @@ impl Server {
         })
     }
 
-
     pub fn start_server(&self) -> Result<()> {
+
+        info!(
+            "Start server at {}, minning address: {}",
+            &self.node_address, &self.mining_address
+        );
+
         let listener = TcpListener::bind(&self.node_address).unwrap();
         info!("Server listen...");
 
@@ -150,7 +155,7 @@ impl Server {
 
         Ok(())
     }
-    
+
     /// recieve sender's node_set
     fn handle_addr(&self, msg: Vec<String>) -> Result<()> {
         info!("receive address msg: {:#?}", msg);
@@ -437,7 +442,7 @@ impl Server {
 
         Ok(())
     }
-    
+
     fn handle_inv(&self, msg: Invmsg) -> Result<()> {
         info!("receive inv msg: {:#?}", msg);
         if msg.kind == "block" {
@@ -495,7 +500,6 @@ impl Server {
         Ok(())
     }
 
-    
     /// send back complete block/tx body to **`from_addr`**
     fn handle_get_data(&self, msg: GetDatamsg) -> Result<()> {
         info!("receive get data msg: {:#?}", msg);
