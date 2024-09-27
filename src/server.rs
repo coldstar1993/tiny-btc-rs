@@ -133,6 +133,23 @@ impl Server {
         })
     }
 
+
+    pub fn start_server(&self) -> Result<()> {
+        let listener = TcpListener::bind(&self.node_address).unwrap();
+        info!("Server listen...");
+
+        for stream in listener.incoming() {
+            let stream = stream?;
+            let server1 = Server {
+                node_address: self.node_address.clone(),
+                mining_address: self.mining_address.clone(),
+                inner: Arc::clone(&self.inner),
+            };
+            thread::spawn(move || server1.handle_connection(stream));
+        }
+
+        Ok(())
+    }
     
     /// recieve sender's node_set
     fn handle_addr(&self, msg: Vec<String>) -> Result<()> {
