@@ -134,6 +134,25 @@ impl Server {
     }
 
     pub fn start_server(&self) -> Result<()> {
+        // clone a new Server instance, due to the usage within thread::spawn below.
+        let server1 = Server {
+            node_address: self.node_address.clone(),
+            mining_address: self.mining_address.clone(),
+            inner: Arc::clone(&self.inner),
+        };
+
+        thread::spawn(move || {
+            thread::sleep(Duration::from_millis(1000));
+            if server1.get_best_height()? == -1 {
+                server1.request_blocks()
+            } else {
+                let nodeset = server1.get_known_nodes();
+                for node in nodeset {
+                    server1.send_version(&node);
+                }
+                Ok(())
+            }
+        });
 
         info!(
             "Start server at {}, minning address: {}",
