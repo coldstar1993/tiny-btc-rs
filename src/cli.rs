@@ -3,8 +3,8 @@ use crate::common::Result;
 use crate::server::Server;
 //use crate::txn::;
 use crate::blockchain::UTXOSet;
+use crate::txn::Transaction;
 use crate::wallet::Wallets;
-use crate::txn::{Transaction};
 use crate::CONFIG;
 use bitcoincash_addr::Address;
 use clap::{arg, Command};
@@ -55,6 +55,31 @@ impl Cli {
                     .arg(arg!(<ADDRESS>" 'wallet address'")),
             )
             .get_matches();
+
+        if let Some(ref matches) = matches.subcommand_matches("startminer") {
+            let port = if let Some(port) = matches.get_one::<String>("PORT") {
+                port
+            } else {
+                println!("PORT not supply!: usage");
+                exit(1)
+            };
+
+            let address = if let Some(address) = matches.get_one::<String>("ADDRESS") {
+                address
+            } else {
+                println!("ADDRESS not supply!: usage");
+                exit(1)
+            };
+
+            {
+                CONFIG.write().unwrap().port = port.parse().unwrap();
+            }
+
+            let bc = Blockchain::new()?;
+            let utxo_set = UTXOSet { blockchain: bc };
+            let server = Server::new(port, address, utxo_set)?;
+            server.start_server()?;
+        }
 
         Ok(())
     }
