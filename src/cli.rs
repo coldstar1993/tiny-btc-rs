@@ -56,6 +56,10 @@ impl Cli {
             )
             .get_matches();
 
+        if let Some(_) = matches.subcommand_matches("createwallet") {
+            println!("address: {}", cmd_create_wallet()?);
+        }
+
         if let Some(ref matches) = matches.subcommand_matches("startminer") {
             let port = if let Some(port) = matches.get_one::<String>("PORT") {
                 port
@@ -83,4 +87,11 @@ impl Cli {
 
         Ok(())
     }
+}
+
+fn cmd_create_wallet() -> Result<String> {
+    let mut ws = Wallets::new()?;
+    let address = ws.create_wallet();
+    ws.save_all()?;
+    Ok(address)
 }
