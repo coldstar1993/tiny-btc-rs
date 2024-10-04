@@ -56,6 +56,11 @@ impl Cli {
             )
             .get_matches();
 
+            
+        if let Some(_) = matches.subcommand_matches("printchain") {
+            cmd_print_chain()?;
+        }
+
         if let Some(_) = matches.subcommand_matches("createwallet") {
             println!("address: {}", cmd_create_wallet()?);
         }
@@ -94,4 +99,12 @@ fn cmd_create_wallet() -> Result<String> {
     let address = ws.create_wallet();
     ws.save_all()?;
     Ok(address)
+}
+
+fn cmd_print_chain() -> Result<()> {
+    let bc = Blockchain::new()?;
+    for b in bc.iter() {
+        println!("{:#?}", b);
+    }
+    Ok(())
 }
