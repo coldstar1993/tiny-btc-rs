@@ -65,6 +65,10 @@ impl Cli {
             println!("address: {}", cmd_create_wallet()?);
         }
 
+        if let Some(_) = matches.subcommand_matches("listaddresses") {
+            cmd_list_address()?;
+        }
+
         if let Some(ref matches) = matches.subcommand_matches("startminer") {
             let port = if let Some(port) = matches.get_one::<String>("PORT") {
                 port
@@ -105,6 +109,16 @@ fn cmd_print_chain() -> Result<()> {
     let bc = Blockchain::new()?;
     for b in bc.iter() {
         println!("{:#?}", b);
+    }
+    Ok(())
+}
+
+fn cmd_list_address() -> Result<()> {
+    let ws = Wallets::new()?;
+    let addresses = ws.get_all_addresses();
+    println!("addresses: ");
+    for ad in addresses {
+        println!("{}", ad);
     }
     Ok(())
 }
