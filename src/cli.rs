@@ -56,7 +56,6 @@ impl Cli {
             )
             .get_matches();
 
-            
         if let Some(_) = matches.subcommand_matches("printchain") {
             cmd_print_chain()?;
         }
@@ -67,6 +66,11 @@ impl Cli {
 
         if let Some(_) = matches.subcommand_matches("listaddresses") {
             cmd_list_address()?;
+        }
+
+        if let Some(_) = matches.subcommand_matches("reindex") {
+            let count = cmd_reindex()?;
+            println!("Done! There are {} transactions in the UTXO set.", count);
         }
 
         if let Some(ref matches) = matches.subcommand_matches("startminer") {
@@ -121,4 +125,11 @@ fn cmd_list_address() -> Result<()> {
         println!("{}", ad);
     }
     Ok(())
+}
+
+fn cmd_reindex() -> Result<i32> {
+    let bc = Blockchain::new()?;
+    let utxo_set = UTXOSet { blockchain: bc };
+    utxo_set.reindex()?;
+    utxo_set.count_transactions()
 }
