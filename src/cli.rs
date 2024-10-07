@@ -73,6 +73,13 @@ impl Cli {
             println!("Done! There are {} transactions in the UTXO set.", count);
         }
 
+        if let Some(ref matches) = matches.subcommand_matches("getbalance") {
+            if let Some(address) = matches.get_one::<String>("ADDRESS") {
+                let balance = cmd_get_balance(address)?;
+                println!("Balance: {}\n", balance);
+            }
+        }
+
         if let Some(ref matches) = matches.subcommand_matches("startminer") {
             let port = if let Some(port) = matches.get_one::<String>("PORT") {
                 port
@@ -132,4 +139,17 @@ fn cmd_reindex() -> Result<i32> {
     let utxo_set = UTXOSet { blockchain: bc };
     utxo_set.reindex()?;
     utxo_set.count_transactions()
+}
+
+fn cmd_get_balance(address: &str) -> Result<i32> {
+    let pub_key_hash = Address::decode(address).unwrap().body;
+    let bc = Blockchain::new()?;
+    let utxo_set = UTXOSet { blockchain: bc };
+    let utxos = utxo_set.find_UTXO(&pub_key_hash)?;
+
+    let mut balance = 0;
+    for out in utxos.outputs {
+        balance += out.value;
+    }
+    Ok(balance)
 }
