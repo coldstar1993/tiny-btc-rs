@@ -366,6 +366,12 @@ impl Server {
         self.send_data(addr, &data)
     }
 
+    pub fn send_transaction(tx: &Transaction, utxoset: UTXOSet) -> Result<()> {
+        let server = Server::new("7000", "", utxoset)?;
+        server.send_tx(&CONFIG.read().unwrap().current_node(), tx)?;
+        Ok(())
+    }
+
     fn send_version(&self, addr: &str) -> Result<()> {
         info!("send version info to: {}", addr);
         let data = Versionmsg {

@@ -87,6 +87,41 @@ impl Cli {
             }
         }
 
+        
+        if let Some(ref matches) = matches.subcommand_matches("send") {
+            let from = if let Some(address) = matches.get_one::<String>("FROM") {
+                address
+            } else {
+                println!("from not supply!: usage");
+                exit(1)
+            };
+
+            let to = if let Some(address) = matches.get_one::<String>("TO") {
+                address
+            } else {
+                println!("from not supply!: usage");
+                exit(1)
+            };
+
+            let amount: i32 = if let Some(amount) = matches.get_one::<String>("AMOUNT") {
+                amount.parse()?
+            } else {
+                println!("from not supply!: usage");
+                exit(1)
+            };
+
+            if matches.contains_id("mine") {
+                cmd_send(from, to, amount, true)?;
+            } else {
+                cmd_send(from, to, amount, false)?;
+            }
+
+            /*else {
+                println!("Not printing testing lists...");
+            }*/
+        }
+
+
         if let Some(ref matches) = matches.subcommand_matches("startminer") {
             let port = if let Some(port) = matches.get_one::<String>("PORT") {
                 port
@@ -168,5 +203,24 @@ fn cmd_create_blockchain(address: &str) -> Result<()> {
     let utxo_set = UTXOSet { blockchain: bc };
     utxo_set.reindex()?;
     println!("create blockchain");
+    Ok(())
+}
+
+fn cmd_send(from: &str, to: &str, amount: i32, mine_now: bool) -> Result<()> {
+    let bc = Blockchain::new()?;
+    let mut utxo_set = UTXOSet { blockchain: bc };
+    let wallets = Wallets::new()?;
+    let wallet = wallets.get_wallet(from).unwrap();
+    let tx = Transaction::new_UTXO(wallet, to, amount, &utxo_set)?;
+    if mine_now {
+        let cbtx = Transaction::new_coinbase(from.to_string(), String::from("reward!"))?;
+        let new_block = utxo_set.blockchain.mine_block(vec![cbtx, tx])?;
+
+        utxo_set.update(&new_block)?;
+    } else {
+        Server::send_transaction(&tx, utxo_set)?;
+    }
+
+    println!("success!");
     Ok(())
 }
