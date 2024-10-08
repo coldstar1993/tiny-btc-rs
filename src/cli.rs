@@ -80,6 +80,13 @@ impl Cli {
             }
         }
 
+        
+        if let Some(ref matches) = matches.subcommand_matches("create") {
+            if let Some(address) = matches.get_one::<String>("ADDRESS") {
+                cmd_create_blockchain(address)?;
+            }
+        }
+
         if let Some(ref matches) = matches.subcommand_matches("startminer") {
             let port = if let Some(port) = matches.get_one::<String>("PORT") {
                 port
@@ -152,4 +159,14 @@ fn cmd_get_balance(address: &str) -> Result<i32> {
         balance += out.value;
     }
     Ok(balance)
+}
+
+fn cmd_create_blockchain(address: &str) -> Result<()> {
+    let address = String::from(address);
+    let bc = Blockchain::create_blockchain(address)?;
+
+    let utxo_set = UTXOSet { blockchain: bc };
+    utxo_set.reindex()?;
+    println!("create blockchain");
+    Ok(())
 }
