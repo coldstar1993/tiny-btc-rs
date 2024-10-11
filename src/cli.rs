@@ -80,14 +80,12 @@ impl Cli {
             }
         }
 
-        
         if let Some(ref matches) = matches.subcommand_matches("create") {
             if let Some(address) = matches.get_one::<String>("ADDRESS") {
                 cmd_create_blockchain(address)?;
             }
         }
 
-        
         if let Some(ref matches) = matches.subcommand_matches("send") {
             let from = if let Some(address) = matches.get_one::<String>("FROM") {
                 address
@@ -121,6 +119,18 @@ impl Cli {
             }*/
         }
 
+        if let Some(ref matches) = matches.subcommand_matches("startnode") {
+            if let Some(port) = matches.get_one::<String>("PORT") {
+                {
+                    CONFIG.write().unwrap().port = port.parse().unwrap();
+                }
+
+                let bc = Blockchain::new()?;
+                let utxo_set = UTXOSet { blockchain: bc };
+                let server = Server::new(port, "", utxo_set)?;
+                server.start_server()?;
+            }
+        }
 
         if let Some(ref matches) = matches.subcommand_matches("startminer") {
             let port = if let Some(port) = matches.get_one::<String>("PORT") {
