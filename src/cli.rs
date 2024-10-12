@@ -20,7 +20,7 @@ impl Cli {
         let matches = Command::new("simplified-btc-rs")
             .version("0.1")
             .author("luozhixiao1993@gmail.com")
-            .about("blockchain in rust: a simple blockchain for learning")
+            .about("POW+UTXO blockchain demo, just for learning")
             .subcommand(Command::new("printchain").about("print all the chain blocks"))
             .subcommand(Command::new("createwallet").about("create a wallet"))
             .subcommand(Command::new("listaddresses").about("list all addresses"))
