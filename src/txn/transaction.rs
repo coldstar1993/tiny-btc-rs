@@ -214,3 +214,26 @@ impl Transaction {
         Ok(true)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::wallet::Wallets;
+
+    use super::*;
+
+    #[test]
+    fn test_signature() {
+        let mut ws = Wallets::new().unwrap();
+        let wa1 = ws.create_wallet();
+        let w = ws.get_wallet(&wa1).unwrap().clone();
+        ws.save_all().unwrap();
+        drop(ws);
+
+        let data = String::from("test");
+        let tx = Transaction::new_coinbase(wa1, data).unwrap();
+        assert!(tx.is_coinbase());
+
+        let signature = ed25519::signature(tx.id.as_bytes(), &w.secret_key);
+        assert!(ed25519::verify(tx.id.as_bytes(), &w.public_key, &signature));
+    }
+}
